@@ -72,7 +72,7 @@ def myNetwork():
             host.cmd('route add -net 0.0.0.0 netmask 0.0.0.0 ' + host.name + '-eth0')
             
         #if host.name == 'C':
-         #   for i in range(0, 4):
+        #   for i in range(0, 4):
                 #host.cmd('echo 1 > /proc/sys/net/ipv4/conf/' + host.name + '-eth' + str(i) + '/proxy_arp') 
                 
     def change_delay(host, dif):

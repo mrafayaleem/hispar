@@ -1,7 +1,7 @@
 ## Pyretic-specific imports
 from pyretic.modules.arp import ARP, arp, mac_learner
 from pyretic.lib.corelib import match, if_, identity
-from controller import quality_mod
+from quality import quality_mod
 
 ## SDX-specific imports
 from sdx.core import sdx_parse_config, sdx_parse_policies, sdx_platform

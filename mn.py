@@ -22,7 +22,7 @@ def myNetwork():
     A = net.addHost('A', ip='10.0.0.6', defaultRoute=None)
     B = net.addHost('B', ip='10.0.0.8', defaultRoute=None)
     C = net.addHost('C', ip='10.0.0.7', defaultRoute=None)
-    h2 = net.addHost('h2', ip='10.0.0.2', defaultRoute=None)
+    h2 = net.addHost('h2', ip='10.1.0.2', defaultRoute=None)
     google = net.addHost('google', ip='173.194.39.41', defaultRoute=None)
     facebook = net.addHost('facebook', ip='173.252.110.27', defaultRoute=None)
     yahoo = net.addHost('yahoo', ip='98.138.253.109', defaultRoute=None)
@@ -62,8 +62,9 @@ def myNetwork():
             host.cmd('route add -net 10.0.0.0 netmask 255.0.0.0 ' + host.name + '-eth0')
         elif host.name in ['A', 'B', 'C']:
             host.cmd('sysctl net.ipv4.ip_forward=1')
-            host.cmd('ifconfig ' + host.name + '-th1 ' + host.IP())
             for i in range(0, 4):
+                print  'ifconfig ' + host.name + '-eth' + str(i) + ' ' + host.IP()
+                host.cmd('ifconfig ' + host.name + '-eth' + str(i) + ' ' + host.IP())
                 host.cmd('echo 1 > /proc/sys/net/ipv4/conf/' + host.name + '-eth' + str(i) + '/proxy_arp')
             host.cmd('route add -net 173.194.0.0 netmask 255.255.0.0 ' + host.name + '-eth1')
             host.cmd('route add -net 173.252.0.0 netmask 255.255.0.0 ' + host.name + '-eth2')
@@ -81,12 +82,12 @@ def myNetwork():
             old = float(host.cmd("tc -s qdisc ls dev " + inf + " | awk 'NR==2{print $10}'")[:-3])
             host.cmd("tc qdisc change dev " + inf + " root netem delay " + str(old+dif) + "ms")
             
-    post_task(1*60, change_delay, [A, 150])
+    '''post_task(1*60, change_delay, [A, 150])
     post_task(3*60, change_delay, [A, -150])
     post_task(2*60, change_delay, [B, 80])
     post_task(4*60, change_delay, [B, -80])
     post_task(3*60, change_delay, [C, 80])
-    post_task(5*60, change_delay, [C, -80])
+    post_task(5*60, change_delay, [C, -80])'''
     
     CLI(net)
     net.stop()

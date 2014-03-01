@@ -30,4 +30,4 @@ def main():
     (sdx_policy, base) = sdx()
     print sdx_policy
     q = quality_mod(base)
-    return q + if_(ARP, arp(), if_(BGP, identity, sdx_policy)) >> mac_learner()
+    return if_(BGP, identity, sdx_policy)

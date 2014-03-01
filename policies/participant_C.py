@@ -1,6 +1,6 @@
 ## Pyretic-specific imports
 from pyretic.lib.corelib import parallel, match
-from pyretic.core.network import IPPrefix
+from pyretic.core.network import IPPrefix, IP
 
 ## SDX-specific imports
 ## General imports
@@ -25,6 +25,7 @@ def policy(participant, fwd):
     participants = parse_config(cwd + "/policies/local.cfg")
     
     return (
+        (match(dstip=IP('10.0.0.7')) >> fwd(participant.phys_ports[0])) +
         (parallel([match(dstip=participants["C"]["IPP"][i]) for i in range(len(participants["C"]["IPP"]))]) >> fwd(participant.phys_ports[0])) +
         (parallel([match(dstip=participants["h2"]["IPP"][i]) for i in range(len(participants["h2"]["IPP"]))]) >> fwd(participant.peers['h2']))
     )

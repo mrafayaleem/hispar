@@ -1,7 +1,10 @@
 ## Pyretic-specific imports
 from pyretic.modules.arp import ARP, arp, mac_learner
+from pyretic.core.language import DynamicPolicy
 from pyretic.lib.corelib import match, if_, identity
 from quality import quality_mod
+from threading import Thread
+import time
 
 ## SDX-specific imports
 from sdx.core import sdx_parse_config, sdx_parse_policies, sdx_platform
@@ -24,10 +27,25 @@ def sdx():
     return (sdx_platform(base), base)
 
 ### Main ###
-    
+
+class Timely(DynamicPolicy):
+    def __init__(self, sdx_policy):
+        self.sdx_policy = sdx_policy
+        super(Timely, self).__init__(sdx_policy)
+        tlooper = Thread(target=self.looper)
+        tlooper.start()
+
+    def looper(self):
+        while(True):
+            time.sleep(60)
+            self.update_policy()
+
+    def update_policy(self):
+        self.policy = self.sdx_policy
+
 def main():
     """Handle ARPs, BGPs, SDX and then do MAC learning"""
     (sdx_policy, base) = sdx()
     print sdx_policy
     q = quality_mod(base)
-    return if_(BGP, identity, sdx_policy)
+    return if_(BGP, identity, Timely(sdx_policy))

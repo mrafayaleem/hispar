@@ -1,6 +1,6 @@
 from pyretic.lib.corelib import *
 from pyretic.lib.std import *
-from pyretic.sdx.lib.common import *
+from sdx.common import *
 from quality import HRange
 
 import json
@@ -22,25 +22,25 @@ def parse_config(config_file):
 def policy(participant, fwd):
     k = drop
     
-    j = if_((match(dstip=IPPrefix("98.138.0.0/16"), time=HRange(1,5))), fwd(participant.peers["C"]), k)
+    j = if_((match(dstip=IPPrefix("98.138.0.0/16"), time=HRange(0,5))), fwd(participant.peers["C"]), k)
     
     i = if_((match(dstip=IPPrefix("173.194.0.0/16"), time=HRange(3,5))), fwd(participant.peers["A"]), j)
     
-    h = if_((match(dstip=IPPrefix("173.194.0.0/16"), time=HRange(2,2))), fwd(participant.peers["B"]), i)
+    h = if_((match(dstip=IPPrefix("173.194.0.0/16"), time=HRange(1,2))), fwd(participant.peers["B"]), i)
     
-    g = if_((match(dstip=IPPrefix("173.194.0.0/16"), time=HRange(1,1))), fwd(participant.peers["A"]), h)
+    g = if_((match(dstip=IPPrefix("173.194.0.0/16"), time=HRange(0,0))), fwd(participant.peers["A"]), h)
     
     f = if_((match(dstip=IPPrefix("173.252.0.0/16"), time=HRange(4,5))), fwd(participant.peers["B"]), g)
     
-    e = if_((match(dstip=IPPrefix("173.252.0.0/16"), time=HRange(2,3))), fwd(participant.peers["A"]), f)
+    e = if_((match(dstip=IPPrefix("173.252.0.0/16"), time=HRange(1,3))), fwd(participant.peers["A"]), f)
     
-    d = if_((match(dstip=IPPrefix("173.252.0.0/16"), time=HRange(1,1))), fwd(participant.peers["B"]), e)
+    d = if_((match(dstip=IPPrefix("173.252.0.0/16"), time=HRange(0,0))), fwd(participant.peers["B"]), e)
 
-    c = if_((match(dstip=IP("10.0.0.7"))), fwd(participant.peers["C"]), k)
+    c = if_((match(dstip=IP("10.0.0.7"))), fwd(participant.peers["C"]), d)
 
-    b = if_((match(dstip=IP("10.0.0.8"))), fwd(participant.peers["B"]), j)
+    b = if_((match(dstip=IP("10.0.0.8"))), fwd(participant.peers["B"]), c)
 
-    a = if_((match(dstip=IP("10.0.0.6"))), fwd(participant.peers["A"]), i)
+    a = if_((match(dstip=IP("10.0.0.6"))), fwd(participant.peers["A"]), b)
     
 
     participants = parse_config(cwd + "/policies/local.cfg")

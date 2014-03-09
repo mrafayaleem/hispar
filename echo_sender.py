@@ -1,131 +1,134 @@
-'''
+"""
 Created on Feb 6, 2014
 
 @author: root
-'''
-from pyretic.core.network import IP_TYPE, Packet
+"""
+from pyretic.core.network import IP_TYPE, IP
+from pyretic.core.packet import Packet
 from threading import Thread, Lock
 import time
 from pox.lib.packet import icmp, echo, ipv4, ethernet
 from pox.lib.addresses import IPAddr
+import random
 
-ICMP=0x01
-TCP=0x06
-UDP=0x11
-IP=0x0800
-hostip = "10.0.0.2"
-hostmac = "00:00:00:00:00:00"
-lock = Lock()
+ICMP = 0x01
+TCP = 0x06
+UDP = 0x11
+
+dummyhostip = "10.0.0.1"
+dummyhostmac = "00:00:00:00:00:08"
+excl_list = [IP('10.0.0.6'), IP('10.0.0.7'), IP('10.0.0.8'), IP('10.1.0.2'), IP('10.0.0.1')]
+BURST_SIZE = 4
+
 
 class EchoSender():
-    '''
-    Observes packets to decide which targets to measure quality against
-    and sends icmp requests to those IPs
-    '''
+    """Observes packets to decide which targets to measure quality against
+    and sends icmp echo requests to those IPs"""
+
     net = None
-    pending_echo = {}
 
     def __init__(self, sdx):
-        self.tid = 0
         self.sdx = sdx
-        self.idseq = 1
-        self.seq = 1
-        self.targets = []
-        self.tdone = {}
-        
-        tstarter = Thread(target=self.send_burst)
-        tstarter.start()
-        
-        tdiscarder = Thread(target=self.discarder)
-        tdiscarder.start()
-    
+
+        self.sent_echos_lock = Lock()
+        self.targets_lock = Lock()
+        self.target_list = []
+        self.target_dict = {}
+        self.sent_echos = {}
+
+        send_burst_thread = Thread(target=self.send_burst)
+        send_burst_thread.start()
+
+    def delete_target(self, endhost, participant):
+        with self.targets_lock:
+            del self.target_dict[(endhost, participant)]
+            self.target_list.remove({"endhost": endhost, "participant": participant})
+
+    def del_sent_echo(self, endhost, burstid):
+        with self.sent_echos_lock:
+            del self.sent_echos[(endhost, burstid)]
+
     def take_targets(self, counts):
-        '''Takes packet counts grouped by srcip and inport and decides which IP
-        addresses to send icmp echo requests to'''
-         
+        """Takes packet counts grouped by srcip and inport and decides which IP
+        addresses to send icmp echo requests to"""
+
         for k, v in counts.items():
+            if k.map['srcip'] in excl_list or v <= 1:
+                continue
+
             srcip = str(k.map['srcip'])
-            if  srcip != hostip and v > 1:
-                for p in self.sdx.participants:
-                    if p.phys_ports[0].id_ == k.map['inport']:
-                        with(lock): 
-                            if not self.tdone.has_key(srcip + str(p)):
-                                self.targets.append({"endip": srcip, "part": p})
-                                self.tdone[srcip + str(p)] = 1                
-                
+
+            #just need portid to port object mapping. having to iterate all over
+            for p in self.sdx.participants:
+                #check if target is not already added
+                if p.phys_ports[0].id_ == k.map['inport'] and not (srcip, p) in self.target_dict:
+                    with self.targets_lock:
+                        self.target_list.append({"endhost": srcip, "participant": p})
+                        self.target_dict[(srcip, p)] = 1
+
     def send_burst(self):
-        '''Method to be run in a separate thread. Wakes up after certain time to send
+        """Method to be run in a separate thread. Wakes up after certain time to send
         bursts of icmp echo requests to target IP addresses. Time configured so that every
-        target recieves 4 bursts per minute'''
-        
-        while(True):
-            if len(self.targets) > 0:
-                time.sleep(60/ (4*len(self.targets)))
-                for i in range(0, 10):
-                    i
-                    time.sleep(0.2)
-                    self.__echo_request(srcip = hostip,
-                                        dstip = self.targets[self.tid]["endip"],
-                                        srcmac = hostmac,
-                                        participant = self.targets[self.tid]["part"],
-                                        idseq = self.idseq,
-                                        seq = self.seq)
-                    with(lock):
-                        EchoSender.pending_echo[(self.targets[self.tid]["endip"], self.idseq, self.seq)] = [time.time(), self.targets[self.tid]["part"]]
-                    self.idseq = (self.idseq + 1) % 256
-                    self.seq = (self.seq + 1) % 256
-                    self.tid = (self.tid + 1) % len(self.targets)
-            else:
+        target recieves 4 bursts per minute"""
+
+        current_target = 0
+        while True:
+            if len(self.target_list) > 0:
                 time.sleep(1)
-                
-    def discarder(self):
-        '''Method to be run in a separate thread. Wakes up every 2 seconds to see
-        which pending echo requests have not recieved replies and discards them as lost
-        packets'''
-        
-        while(True):
-            time.sleep(2)
-            with(lock):
-                now = time.time()
-                for key,val in self.pending_echo.items():
-                    if (now - val[0]) > 10:
-                        self.pending_echo.pop(key)
-    
-    def set_network(self, network):
-        self.network = network
-        
-    def __echo_request(self, srcip, dstip, srcmac, participant, idseq, seq, switch=1):
-        '''Constructs an icmp echo request packet and injects into network'''
-        
+                #time.sleep(60 / (4 * len(self.target_list)))
+
+                burstid = random.randint(1, 65535)
+                key = (self.target_list[current_target]["endhost"], burstid)
+                self.sent_echos[key] = range(BURST_SIZE)
+                for burstseq in range(0, BURST_SIZE):
+                    time.sleep(0.5)
+                    EchoSender.__echo_request(srcip=dummyhostip,
+                                              dstip=self.target_list[current_target]["endhost"],
+                                              srcmac=dummyhostmac,
+                                              participant=self.target_list[current_target]["participant"],
+                                              idseq=burstid,
+                                              seq=burstseq)
+                    with self.sent_echos_lock:
+                        self.sent_echos[key][burstseq] = {'sent_at': time.time(),
+                                                          'through': self.target_list[current_target][
+                                                              "participant"],
+                                                          'rtt': None}
+
+                current_target = (current_target + 1) % len(self.target_list)
+            else:
+                time.sleep(5)
+
+    def get_sent_at(self, srcip, burstid, burstseq):
+        if (srcip, burstid) in self.sent_echos:
+            return self.sent_echos[(srcip, burstid)][burstseq]['sent_at']
+
+    def set_rtt(self, srcip, burstid, burstseq, rtt):
+        if (srcip, burstid) in self.sent_echos:
+            with self.sent_echos_lock:
+                self.sent_echos[(srcip, burstid)][burstseq]['rtt'] = rtt
+
+    @staticmethod
+    def __echo_request(srcip, dstip, srcmac, participant, idseq, seq, switch=1, payload="dummy payload"):
+        """Constructs an icmp echo request packet and injects into network"""
+
         pport = participant.phys_ports[0]
-        
+
         r = echo(id=idseq, seq=seq)
-        r.set_payload("dummy payload")
+        r.set_payload(payload)
         i = icmp(type=8, code=0)
         i.set_payload(r)
         ip = ipv4(protocol=ICMP,
                   srcip=IPAddr(srcip),
                   dstip=IPAddr(dstip))
         ip.set_payload(i)
-        e = ethernet(type=IP,
-                 src=srcmac,
-                 dst=str(pport.mac))
+        e = ethernet(type=IP_TYPE,
+                     src=srcmac,
+                     dst=str(pport.mac))
         e.set_payload(ip)
-        
-        rp = Packet()
-        rp = rp.modify(protocol=ICMP)
-        rp = rp.modify(ethtype=IP_TYPE)
-        rp = rp.modify(switch=switch)
-        rp = rp.modify(inport=-1)
-        rp = rp.modify(outport=pport.id_)
-        rp = rp.modify(srcport=8)
-        rp = rp.modify(dstport=0)
-        rp = rp.modify(srcip=srcip)
-        rp = rp.modify(srcmac=srcmac)
-        rp = rp.modify(dstip=dstip)
-        rp = rp.modify(dstmac=str(pport.mac))
-        
-        rp = rp.modify(tos=0)
-        rp = rp.modify(raw=e.pack())
-    
-        EchoSender.net.inject_packet(rp)
+
+        pkt = Packet()
+        d = dict(protocol=ICMP, ethtype=IP_TYPE, switch=switch, inport=-1, outport=pport.id_, srcport=8, dstport=0,
+                 srcip=srcip, srcmac=srcmac, dstip=dstip, dstmac=str(pport.mac), tos=0, raw=e.pack())
+        pkt = pkt.modifymany(d)
+
+        EchoSender.net.inject_packet(pkt)

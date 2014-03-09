@@ -21,6 +21,7 @@ class SDX(object):
         self.participant_id_to_in_var = {}
         self.out_var_to_port = {}
         self.port_id_to_out_var = {}
+        self.mac_to_port = {}
     
     def add_participant(self, participant):
         self.participants.append(participant)
@@ -29,6 +30,7 @@ class SDX(object):
         for port in participant.phys_ports:
             self.port_id_to_out_var[port.id_] = "out" + participant.id_.upper() + "_" + str(i)
             self.out_var_to_port["out" + participant.id_.upper() + "_" + str(i)] = port
+            self.mac_to_port[port.mac] = port
             i += 1
     
     def fwd(self, port):

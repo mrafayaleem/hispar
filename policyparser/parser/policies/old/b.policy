@@ -1,0 +1,35 @@
+{
+    "outbound":
+    {
+        "110.0.0.0/24":
+        [
+            {
+                "protocol": "*",
+                "time": "*",
+                "peer": "A"
+            },
+            {
+                "protocol": "HTTP",
+                "time": "7,10",
+                "peer": "A"
+            },
+            {
+                "protocol": "*",
+                "time": "3,5",
+                "peer": "A"
+            }
+        ]
+    },
+
+    "inbound":
+    {
+        "140.0.0.0/24":
+        [
+            {
+                "protocol": "*",
+                "time": "*",
+                "peer": "*"
+            }
+        ]
+    }
+}

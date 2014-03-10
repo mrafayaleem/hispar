@@ -1,0 +1,76 @@
+{
+    "outbound":
+    {
+        "110.0.0.0/24":
+        [
+            {
+                "protocol": "ICMP",
+                "time": "6, 7",
+                "latency": 10,
+                "loss": 5,
+                "cost": 15,
+                "routes": ["B", "C"],
+                "default": ["E"],
+                "update_interval": 30
+            },
+            {
+                "protocol": "*",
+                "time": "*",
+                "latency": 12,
+                "loss": 7,
+                "cost": 17,
+                "routes": ["B"],
+                "default": ["C"],
+                "update_interval": 15
+            }
+        ],
+        "120.0.0.0/24":
+        [
+            {
+                "protocol": "*",
+                "time": "*",
+                "latency": 15,
+                "loss": 10,
+                "cost": 20,
+                "routes": ["A", "C"],
+                "default": [],
+                "update_interval": 20
+            }
+        ],
+        "130.0.0.0/24":
+        [
+            {
+                "protocol": "HTTP",
+                "time": "6, 6",
+                "latency": 15,
+                "loss": 10,
+                "cost": 20,
+                "routes": ["B"],
+                "default": [],
+                "update_interval": 60
+            },
+            {
+                "protocol": "*",
+                "time": "*",
+                "latency": 15,
+                "loss": 10
+                "cost": 20
+                "routes": ["A", "B"],
+                "default": [],
+                "update_interval": 120
+            }
+        ]
+    },
+
+    "inbound":
+    {
+        "140.0.0.0/24":
+        [
+            {
+                "protocol": "*",
+                "time": "*",
+                "peer": "*"
+            }
+        ]
+    }
+}

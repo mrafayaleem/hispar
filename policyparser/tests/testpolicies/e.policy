@@ -1,0 +1,47 @@
+{
+	"outbound":
+	[
+		{
+			"protocol": "UDP",
+			"peers":
+			[
+				"C",
+				"~F",
+				"~D"
+			]
+		},
+		{
+			"protocol": "TCP",
+			"peers":
+			[
+				"C"
+			]
+		},
+		{
+			"protocol": "*",
+			"peers":
+			[
+				"D",
+				"C",
+				"F"
+			]
+		}
+	],
+	"inbound":
+	[
+		{
+			"protocol": "HTTP",	
+			"peers":
+			[
+				"C"
+			]
+		},
+		{
+			"protocol": "*",
+			"peers":
+			[
+				"F"
+			]
+		}
+	]
+}

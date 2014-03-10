@@ -1,0 +1,6 @@
+# Byte-compiled
+*.py[cod]
+
+# Backup files
+*.bak
+*.bak.py

@@ -11,7 +11,9 @@
                 "cost": 15,
                 "routes": ["B", "C"],
                 "default": ["E"],
-                "update_interval": 30
+                "update_interval": 30,
+                "policy_type": "loose",
+                "check_interval": 15
             },
             {
                 "protocol": "*",
@@ -21,7 +23,8 @@
                 "cost": 17,
                 "routes": ["B"],
                 "default": ["C"],
-                "update_interval": 15
+                "update_interval": 15,
+                "policy_type": "strict"
             }
         ],
         "120.0.0.0/24":
@@ -34,7 +37,8 @@
                 "cost": 20,
                 "routes": ["A", "C"],
                 "default": [],
-                "update_interval": 20
+                "update_interval": 20,
+                "policy_type": "strict"
             }
         ],
         "130.0.0.0/24":
@@ -47,7 +51,8 @@
                 "cost": 20,
                 "routes": ["B"],
                 "default": [],
-                "update_interval": 60
+                "update_interval": 60,
+                "policy_type": "strict"
             },
             {
                 "protocol": "*",
@@ -57,7 +62,8 @@
                 "cost": 20
                 "routes": ["A", "B"],
                 "default": [],
-                "update_interval": 120
+                "update_interval": 120,
+                "policy_type": "loose"
             }
         ]
     },

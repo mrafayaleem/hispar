@@ -3,6 +3,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from threading import Lock
 from pyretic.core.network import IPPrefix, IP
+from hispar.extensions import HRange
 import quality
 import time
 from threading import Thread
@@ -70,7 +71,7 @@ class DBManager(object):
         hour_of_day = m_time.tm_hour
         route_id = -1
         for r in self.routes[participant]:
-            if IPPrefix(r.subnet) == IP(endhost) and quality.HRange.from_range(r.HRange) == hour_of_day:
+            if IPPrefix(r.subnet) == IP(endhost) and HRange.from_range(r.HRange) == hour_of_day:
                 route_id = r.idroute
                 break
 

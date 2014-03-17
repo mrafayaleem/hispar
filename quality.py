@@ -1,42 +1,14 @@
 from pyretic.core.language import match, IP, ARP_TYPE, fwd
 from pyretic.lib.corelib import parallel
+from pyretic.lib.query import count_packets
+
 from echo_sender import EchoSender, dummyhostip, IP_TYPE, ICMP, BURST_SIZE
 from echo_receiver import EchoReciever
-from pyretic.lib.query import count_packets
-from threading import Thread
 from database import DBManager
+
+from threading import Thread
 import time
 import numpy
-
-
-class HRange:
-    """Models an hour range to serve for match policy. The range
-    is from hr_from to hr_to both inclusive"""
-
-    def __init__(self, hr_from, hr_to):
-        self.hr_from = hr_from
-        self.hr_to = hr_to
-
-    @classmethod
-    def from_range(cls, str_range):
-        split = str_range.split(",")
-        hr_from = int(split[0])
-        hr_to = int(split[1])
-        return cls(hr_from, hr_to)
-
-    def __eq__(self, other):
-        """Overrides the == operator to check if other falls within range.
-        Comparison of two HRange objects not supported"""
-        #print "comparing " + str(other) + " to range " + self.__str__()
-        if self.hr_from <= other <= self.hr_to:
-            return True
-        return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __str__(self):
-        return "(" + str(self.hr_from) + ", " + str(self.hr_to) + ")"
 
 
 def start_aggregator(es):

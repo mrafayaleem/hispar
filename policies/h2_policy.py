@@ -1,7 +1,7 @@
 from pyretic.lib.corelib import *
 from pyretic.lib.std import *
 from sdx.common import *
-from quality import HRange
+from hispar.extensions import HRange
 
 import json
 import os
